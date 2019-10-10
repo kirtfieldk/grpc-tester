@@ -11,6 +11,8 @@ import (
 
 	"github.com/keithkfield/grpc-go-course-tester/greet/greetpb"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 type server struct{}
@@ -54,6 +56,22 @@ func (*server) LongGreet(stream greetpb.GreetService_LongGreetServer) error {
 		result += "Hello " + firstName + "!"
 	}
 
+}
+func (*server) GreetWithDeadline(ctx context.Context, req *greetpb.GreetWithDeadlineRequest) (*greetpb.GreetWithDeadlineResponse, error) {
+	fmt.Println("GreetWothDeadline Envoked")
+	for i := 0; i < 3; i++ {
+		if ctx.Err() == context.Canceled {
+			fmt.Println("Client Cancelled Request")
+			return nil, status.Error(codes.Canceled, "Client Cancelled Req")
+		}
+		time.Sleep(1000 * time.Millisecond)
+	}
+	firstName := req.GetGreeting().GetFirstName()
+	result := "Hello " + firstName
+	res := &greetpb.GreetWithDeadlineResponse{
+		Response: result,
+	}
+	return res, nil
 }
 
 // BIDI stream
